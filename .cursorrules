@@ -1,0 +1,209 @@
+# FocusPilot Cursor Rules
+
+## Project Overview
+
+FocusPilot is an AI-powered productivity coach built as a TypeScript monorepo. It helps users fight procrastination, set meaningful goals, and build sustainable habits through AI-guided task breakdown and streak tracking.
+
+## Architecture
+
+- **Monorepo**: pnpm workspaces + Turborepo
+- **Backend**: Bun + Hono v4 (REST API + Server-Sent Events)
+- **Frontend**: Next.js 15 (App Router), React 18, TypeScript
+- **Database**: Supabase (PostgreSQL + RLS + Auth)
+- **AI**: OpenAI GPT-4 with function calling
+- **Styling**: Tailwind CSS with custom design system
+
+## Project Structure
+
+```
+apps/
+  api/                    # Bun + Hono server
+  web/                    # Next.js frontend
+packages/
+  db/                     # Supabase client + services
+  types/                  # Zod schemas + shared types
+  lib-openai/             # OpenAI agent tools + prompts
+supabase/
+  migrations/             # SQL files
+  seed.sql               # Development data
+```
+
+## Package Management Rules
+
+### Always Use Package Manager Commands
+
+- ❌ **Never manually edit package.json dependencies**
+- ✅ **Always use pnpm commands to manage dependencies**
+
+```bash
+# Adding dependencies
+pnpm add <package>                    # Add to current workspace
+pnpm add <package> -w                 # Add to root workspace
+pnpm add <package> --filter=api       # Add to specific workspace
+pnpm add <package> -D                 # Add as dev dependency
+
+# Updating dependencies
+pnpm update                           # Update all packages
+pnpm update <package>                 # Update specific package
+pnpm update <package> --latest        # Update to latest version
+
+# Removing dependencies
+pnpm remove <package>                 # Remove from current workspace
+pnpm remove <package> --filter=api    # Remove from specific workspace
+```
+
+### Version Management
+
+- Use `^` for minor version updates (e.g., `^4.6.0`)
+- Use `~` for patch updates only when stability is critical
+- Use exact versions for packages with breaking changes
+- Always check compatibility before major version updates
+
+## Development Guidelines
+
+### TypeScript Standards
+
+- **Strict mode enabled** - No `any` types allowed
+- **Explicit return types** for all functions
+- **Interface over type** for object definitions
+- **Zod schemas** for runtime validation
+- **Path mapping** configured for clean imports
+
+### Code Organization
+
+- **Barrel exports** - Use `index.ts` files to expose public APIs
+- **Single responsibility** - Keep functions and components focused
+- **Error boundaries** - Proper error handling at service boundaries
+- **Type safety** - Leverage TypeScript for compile-time safety
+
+### Database Rules
+
+- **RLS enabled** - All tables must have Row Level Security
+- **Typed queries** - Use generated types from Supabase
+- **Service layer** - Database access through service classes only
+- **Migrations** - Schema changes via SQL migration files
+- **Seed data** - Maintain seed.sql for development
+
+### API Design
+
+- **RESTful routes** - Follow REST conventions
+- **Zod validation** - Validate all request/response data
+- **Error handling** - Consistent error response format
+- **Authentication** - Supabase JWT on all protected routes
+- **TypeScript** - Full type safety from DB to API to frontend
+
+### Frontend Standards
+
+- **App Router** - Use Next.js 15 App Router exclusively
+- **Server Components** - Default to server components, use client sparingly
+- **Tailwind CSS** - Use design system classes, minimal custom CSS
+- **Component composition** - Small, reusable components
+- **Loading states** - Handle async operations gracefully
+
+### AI Integration
+
+- **Function calling** - Use OpenAI tools for structured interactions
+- **Prompt management** - Store prompts in `/lib-openai/prompts.ts`
+- **Type safety** - Zod schemas for tool parameters
+- **Error handling** - Graceful fallbacks for AI failures
+- **Context management** - Pass relevant user data to agent
+
+## Naming Conventions
+
+### Files & Directories
+
+- **kebab-case** for directories and files
+- **PascalCase** for React components
+- **camelCase** for functions and variables
+- **SCREAMING_SNAKE_CASE** for constants
+
+### Database
+
+- **snake_case** for table and column names
+- **Descriptive names** - `user_streak` not `us`
+- **Consistent prefixes** - `created_at`, `updated_at`
+- **Foreign keys** - `user_id`, `goal_id`
+
+### API Routes
+
+- **Plural nouns** - `/api/goals`, `/api/tasks`
+- **Resource-based** - `/api/tasks/:id/complete`
+- **HTTP verbs** - GET, POST, PATCH, DELETE
+- **Query parameters** - `?date=2024-01-01&completed=true`
+
+## Testing Strategy
+
+- **Unit tests** for utility functions and services
+- **Integration tests** for API endpoints
+- **Component tests** for React components
+- **Database tests** for SQL functions and triggers
+- **E2E tests** for critical user journeys
+
+## Environment Management
+
+- **Never commit secrets** - Use .env files locally
+- **Environment-specific configs** - .env.local, .env.production
+- **Type-safe env vars** - Validate environment variables
+- **Default values** - Provide sensible defaults where possible
+
+## Performance Guidelines
+
+- **Bundle optimization** - Tree shaking and code splitting
+- **Database indexing** - Proper indexes on query columns
+- **Caching strategies** - Cache static data and API responses
+- **Image optimization** - Use Next.js Image component
+- **Lazy loading** - Load components and data on demand
+
+## Security Rules
+
+- **RLS policies** - Database access restricted by user
+- **Input validation** - Validate all user inputs with Zod
+- **CORS configuration** - Restrict origins in production
+- **JWT verification** - Validate tokens on every request
+- **Sanitization** - Clean user inputs before storage
+
+## Deployment Guidelines
+
+- **Environment parity** - Development matches production
+- **Database migrations** - Run migrations before deployments
+- **Health checks** - Monitor application health
+- **Rollback strategy** - Plan for quick rollbacks
+- **Monitoring** - Log errors and performance metrics
+
+## Git Workflow
+
+- **Feature branches** - One feature per branch
+- **Conventional commits** - Use semantic commit messages
+- **PR reviews** - Require code review before merge
+- **CI/CD** - All tests must pass before merge
+- **Clean history** - Squash commits when merging
+
+## Common Commands
+
+```bash
+# Development
+pnpm dev                  # Start all services
+pnpm dev:web             # Next.js frontend only
+pnpm dev:api             # Bun API server only
+
+# Database
+supabase start           # Start local Supabase
+pnpm db:gen              # Generate TypeScript types
+pnpm db:reset            # Reset with fresh migrations
+
+# Building & Testing
+pnpm build               # Build all packages
+pnpm test                # Run all tests
+pnpm lint                # Run linting
+pnpm type-check          # TypeScript validation
+```
+
+## AI Agent Guidelines
+
+- **Supportive personality** - Always encouraging, never judgmental
+- **Action-oriented** - Break goals into specific, manageable tasks
+- **Contextual awareness** - Use user's current tasks and streak data
+- **Progress celebration** - Acknowledge completed tasks and milestones
+- **Realistic expectations** - Suggest achievable daily goals
+
+Remember: Our goal is to build a production-ready application that helps users achieve their goals through AI-powered productivity coaching. Every decision should prioritize user experience, code maintainability, and system reliability.

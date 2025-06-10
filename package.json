@@ -1,0 +1,29 @@
+{
+  "name": "focuspilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:api": "turbo dev --filter=api",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "db:gen": "supabase gen types typescript --local > packages/db/src/types.ts",
+    "db:reset": "supabase db reset --local",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
