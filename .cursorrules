@@ -178,10 +178,27 @@ pnpm remove <package> --filter=api    # Remove from specific workspace
 - **CI/CD** - All tests must pass before merge
 - **Clean history** - Squash commits when merging
 
+## Development Workflow Rules
+
+### Never Auto-Start Dev Servers
+
+- **NEVER run `pnpm dev`** - The user manages their own development servers
+- **NEVER start services automatically** - Only build packages when types/dependencies change
+- **NEVER interrupt running processes** - The user controls their development environment
+- **Use `pnpm build --filter=<package>`** only when new types or services are added
+
+### No Dummy/Placeholder Content
+
+- **NEVER add placeholder data** - All content must be functional and real
+- **NO hardcoded values** - Use proper environment variables and configuration
+- **NO Lorem ipsum or fake data** - If data is needed, use realistic examples
+- **NO TODO comments** - Implement complete solutions, not partial ones
+- **NO console.log debugging** - Use proper error handling and logging
+
 ## Common Commands
 
 ```bash
-# Development
+# Development (USER CONTROLLED - DON'T RUN)
 pnpm dev                  # Start all services
 pnpm dev:web             # Next.js frontend only
 pnpm dev:api             # Bun API server only
@@ -191,8 +208,8 @@ supabase start           # Start local Supabase
 pnpm db:gen              # Generate TypeScript types
 pnpm db:reset            # Reset with fresh migrations
 
-# Building & Testing
-pnpm build               # Build all packages
+# Building & Testing (USE WHEN NEEDED)
+pnpm build --filter=<package>  # Build specific package only
 pnpm test                # Run all tests
 pnpm lint                # Run linting
 pnpm type-check          # TypeScript validation

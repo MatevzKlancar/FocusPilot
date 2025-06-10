@@ -4,6 +4,7 @@ import {
   GoalsService,
   TasksService,
   StreaksService,
+  ChatService,
   getDefaultClient,
 } from "@focuspilot/db";
 import {
@@ -28,7 +29,7 @@ ai.post("/chat", async (c) => {
   try {
     const auth = c.get("auth");
     const body = await c.req.json();
-    const { message, conversationHistory = [] } = body;
+    const { message, conversationHistory = [], session_id } = body;
 
     if (!message) {
       return c.json({ error: "Message is required" }, 400);
@@ -40,6 +41,7 @@ ai.post("/chat", async (c) => {
     const goalsService = new GoalsService(supabase);
     const tasksService = new TasksService(supabase);
     const streaksService = new StreaksService(supabase);
+    const chatService = new ChatService(supabase);
 
     // Fetch user data in parallel
     const [goals, allTasks, streak] = await Promise.all([
@@ -160,8 +162,53 @@ ${
       }
     }
 
+    // Handle chat persistence
+    let currentSession;
+    try {
+      if (session_id) {
+        // Use existing session
+        currentSession = await chatService.getSessionById(
+          session_id,
+          auth.userId
+        );
+        if (!currentSession) {
+          // Session not found, create new one
+          currentSession = await chatService.createSession({
+            user_id: auth.userId,
+            title: message.slice(0, 50) + (message.length > 50 ? "..." : ""),
+          });
+        }
+      } else {
+        // Get or create a session
+        currentSession = await chatService.getOrCreateCurrentSession(
+          auth.userId,
+          message
+        );
+      }
+
+      // Save user message
+      await chatService.createMessage({
+        session_id: currentSession.id,
+        user_id: auth.userId,
+        role: "user",
+        content: message,
+      });
+
+      // Save assistant response
+      await chatService.createMessage({
+        session_id: currentSession.id,
+        user_id: auth.userId,
+        role: "assistant",
+        content: response,
+      });
+    } catch (chatError) {
+      console.error("Chat persistence error:", chatError);
+      // Continue without failing the request
+    }
+
     return c.json({
       message: response,
+      session_id: currentSession?.id,
       toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
     });
   } catch (error) {
@@ -332,6 +379,114 @@ REALITY CHECK:
         error:
           "I'm having some technical difficulties with task coaching right now, but I'm still here to help! Try asking me again in a moment. 🤖💙",
       },
+      500
+    );
+  }
+});
+
+// GET /chat/sessions - Get all chat sessions for user
+ai.get("/chat/sessions", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const supabase = getDefaultClient();
+    const chatService = new ChatService(supabase);
+
+    const sessions = await chatService.getSessionsWithMessageCount(auth.userId);
+
+    return c.json({
+      success: true,
+      data: sessions,
+    });
+  } catch (error) {
+    console.error("Error fetching chat sessions:", error);
+    return c.json(
+      { success: false, error: "Failed to fetch chat sessions" },
+      500
+    );
+  }
+});
+
+// GET /chat/sessions/:sessionId/messages - Get messages for a specific session
+ai.get("/chat/sessions/:sessionId/messages", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const sessionId = c.req.param("sessionId");
+    const supabase = getDefaultClient();
+    const chatService = new ChatService(supabase);
+
+    // Verify session belongs to user
+    const session = await chatService.getSessionById(sessionId, auth.userId);
+    if (!session) {
+      return c.json({ success: false, error: "Session not found" }, 404);
+    }
+
+    const messages = await chatService.getSessionMessages(
+      sessionId,
+      auth.userId
+    );
+
+    return c.json({
+      success: true,
+      data: {
+        session,
+        messages,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching chat messages:", error);
+    return c.json(
+      { success: false, error: "Failed to fetch chat messages" },
+      500
+    );
+  }
+});
+
+// POST /chat/sessions - Create a new chat session
+ai.post("/chat/sessions", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const body = await c.req.json();
+    const { title } = body;
+
+    const supabase = getDefaultClient();
+    const chatService = new ChatService(supabase);
+
+    const session = await chatService.createSession({
+      user_id: auth.userId,
+      title,
+    });
+
+    return c.json({
+      success: true,
+      data: session,
+    });
+  } catch (error) {
+    console.error("Error creating chat session:", error);
+    return c.json(
+      { success: false, error: "Failed to create chat session" },
+      500
+    );
+  }
+});
+
+// DELETE /chat/sessions/:sessionId - Delete a chat session
+ai.delete("/chat/sessions/:sessionId", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const sessionId = c.req.param("sessionId");
+    const supabase = getDefaultClient();
+    const chatService = new ChatService(supabase);
+
+    await chatService.deleteSession(sessionId, auth.userId);
+
+    return c.json({
+      success: true,
+      message: "Session deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting chat session:", error);
+    return c.json(
+      { success: false, error: "Failed to delete chat session" },
       500
     );
   }

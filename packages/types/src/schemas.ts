@@ -68,15 +68,38 @@ export const StreakSchema = z.object({
 });
 
 // Chat schemas
+export const ChatSessionSchema = z.object({
+  id: UUIDSchema,
+  user_id: UUIDSchema,
+  title: z.string().optional(),
+  last_message_at: DateSchema,
+  created_at: DateSchema,
+  updated_at: DateSchema,
+});
+
 export const ChatMessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system"]),
+  id: UUIDSchema,
+  session_id: UUIDSchema,
+  user_id: UUIDSchema,
+  role: z.enum(["user", "assistant"]),
   content: z.string(),
-  timestamp: DateSchema.optional(),
+  created_at: DateSchema,
+  updated_at: DateSchema,
+});
+
+export const CreateChatSessionSchema = z.object({
+  title: z.string().optional(),
+});
+
+export const CreateChatMessageSchema = z.object({
+  session_id: UUIDSchema,
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1),
 });
 
 export const ChatRequestSchema = z.object({
   message: z.string().min(1),
-  conversation_id: z.string().optional(),
+  session_id: UUIDSchema.optional(),
 });
 
 // Agent tool schemas
@@ -109,7 +132,10 @@ export type TaskCadence = z.infer<typeof TaskCadenceSchema>;
 
 export type Streak = z.infer<typeof StreakSchema>;
 
+export type ChatSession = z.infer<typeof ChatSessionSchema>;
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+export type CreateChatSession = z.infer<typeof CreateChatSessionSchema>;
+export type CreateChatMessage = z.infer<typeof CreateChatMessageSchema>;
 export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 export type CreateGoalTool = z.infer<typeof CreateGoalToolSchema>;

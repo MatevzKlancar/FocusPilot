@@ -98,6 +98,61 @@ export interface Database {
           updated_at?: string;
         };
       };
+      chat_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string | null;
+          last_message_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string | null;
+          last_message_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string | null;
+          last_message_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          user_id?: string;
+          role?: "user" | "assistant";
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -146,14 +201,26 @@ export interface Database {
 export type DbGoal = Database["public"]["Tables"]["goals"]["Row"];
 export type DbTask = Database["public"]["Tables"]["tasks"]["Row"];
 export type DbStreak = Database["public"]["Tables"]["streaks"]["Row"];
+export type DbChatSession =
+  Database["public"]["Tables"]["chat_sessions"]["Row"];
+export type DbChatMessage =
+  Database["public"]["Tables"]["chat_messages"]["Row"];
 
 export type InsertGoal = Database["public"]["Tables"]["goals"]["Insert"];
 export type InsertTask = Database["public"]["Tables"]["tasks"]["Insert"];
 export type InsertStreak = Database["public"]["Tables"]["streaks"]["Insert"];
+export type InsertChatSession =
+  Database["public"]["Tables"]["chat_sessions"]["Insert"];
+export type InsertChatMessage =
+  Database["public"]["Tables"]["chat_messages"]["Insert"];
 
 export type DbUpdateGoal = Database["public"]["Tables"]["goals"]["Update"];
 export type DbUpdateTask = Database["public"]["Tables"]["tasks"]["Update"];
 export type DbUpdateStreak = Database["public"]["Tables"]["streaks"]["Update"];
+export type DbUpdateChatSession =
+  Database["public"]["Tables"]["chat_sessions"]["Update"];
+export type DbUpdateChatMessage =
+  Database["public"]["Tables"]["chat_messages"]["Update"];
 
 // Function return types
 export type TodayTask =

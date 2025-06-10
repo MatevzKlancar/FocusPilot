@@ -4,12 +4,18 @@ import type {
   DbGoal,
   DbTask,
   DbStreak,
+  DbChatSession,
+  DbChatMessage,
   InsertGoal,
   InsertTask,
   InsertStreak,
+  InsertChatSession,
+  InsertChatMessage,
   DbUpdateGoal,
   DbUpdateTask,
   DbUpdateStreak,
+  DbUpdateChatSession,
+  DbUpdateChatMessage,
   TodayTask,
   UserStreak,
 } from "@focuspilot/types";
@@ -20,12 +26,18 @@ export type {
   DbGoal,
   DbTask,
   DbStreak,
+  DbChatSession,
+  DbChatMessage,
   InsertGoal,
   InsertTask,
   InsertStreak,
+  InsertChatSession,
+  InsertChatMessage,
   DbUpdateGoal,
   DbUpdateTask,
   DbUpdateStreak,
+  DbUpdateChatSession,
+  DbUpdateChatMessage,
   TodayTask,
   UserStreak,
 } from "@focuspilot/types";
@@ -34,3 +46,5 @@ export type {
 export type UpdateGoal = DbUpdateGoal;
 export type UpdateTask = DbUpdateTask;
 export type UpdateStreak = DbUpdateStreak;
+export type UpdateChatSession = DbUpdateChatSession;
+export type UpdateChatMessage = DbUpdateChatMessage;
