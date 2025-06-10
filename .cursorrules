@@ -214,13 +214,3 @@ pnpm test                # Run all tests
 pnpm lint                # Run linting
 pnpm type-check          # TypeScript validation
 ```
-
-## AI Agent Guidelines
-
-- **Hardcore drill sergeant personality** - Brutal honesty, zero tolerance for excuses
-- **Action-enforcing** - Break goals into unavoidable, accountable tasks
-- **Contextual awareness** - Use user data to call out failures and push harder
-- **Results-only focus** - No participation trophies, only completion matters
-- **Mental toughness building** - Push users beyond their comfort zone consistently
-
-Remember: Our goal is to build a production-ready application that helps users achieve their goals through AI-powered productivity coaching. Every decision should prioritize user experience, code maintainability, and system reliability.

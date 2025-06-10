@@ -79,18 +79,23 @@ ${
   pendingTasks.length > 0
     ? pendingTasks
         .map(
-          (task) => `• ${task.title}: ${task.description || "No description"}`
+          (task) =>
+            `• [${task.id}] ${task.title}: ${
+              task.description || "No description"
+            }`
         )
         .join("\n")
-    : "• No pending tasks for today! 🎉"
+    : "• No pending tasks for today! Time to create some business-focused goals."
 }
 
 TODAY'S COMPLETED TASKS:
 ${
   todayCompleted.length > 0
-    ? todayCompleted.map((task) => `• ✅ ${task.title}`).join("\n")
+    ? todayCompleted.map((task) => `• ✅ [${task.id}] ${task.title}`).join("\n")
     : "• No tasks completed today yet"
-}`;
+}
+
+IMPORTANT: Only use task IDs shown in brackets above when calling complete_task. Do not make up or guess task IDs.`;
 
     // Create tool context for function calling
     const toolContext: ToolContext = {
@@ -131,6 +136,8 @@ ${
 
     // Handle tool calls if any
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+      const toolResults = [];
+
       for (const toolCall of choice.message.tool_calls) {
         if (toolCall.type === "function") {
           try {
@@ -147,16 +154,77 @@ ${
               result,
             });
 
-            // Add tool result to the response message
-            if (result.message) {
-              response += `\n\n${result.message}`;
-            }
+            toolResults.push(result);
           } catch (error) {
             console.error(
               `Tool execution error for ${toolCall.function.name}:`,
               error
             );
-            response += `\n\nSorry, I had trouble executing that action. Let me try to help you in another way.`;
+
+            // Add context about the error to help the AI respond appropriately
+            const errorObj = error as Error;
+            toolResults.push({
+              success: false,
+              action: "tool_error",
+              data: {
+                tool_name: toolCall.function.name,
+                error_type: errorObj.name || "unknown",
+                error_message: errorObj.message || "Tool execution failed",
+                user_context: {
+                  needs_setup:
+                    toolCall.function.name === "complete_task" &&
+                    errorObj.message?.includes("Invalid uuid"),
+                  suggested_action: "create_goal_first",
+                },
+              },
+            });
+          }
+        }
+      }
+
+      // If we have tool results, generate contextual AI response
+      if (toolResults.length > 0) {
+        const toolContextMessage = toolResults
+          .map((result) => {
+            if (
+              (result.success || result.action === "tool_error") &&
+              result.action &&
+              result.data
+            ) {
+              return `TOOL_RESULT: ${result.action}\nCONTEXT: ${JSON.stringify(
+                result.data,
+                null,
+                2
+              )}`;
+            }
+            return null;
+          })
+          .filter(Boolean)
+          .join("\n\n");
+
+        if (toolContextMessage) {
+          // Generate a contextual response based on tool results
+          const contextualMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+            { role: "system", content: `${SYSTEM_PROMPT}\n\n${userContext}` },
+            { role: "user", content: message },
+            { role: "assistant", content: response },
+            {
+              role: "user",
+              content: `${toolContextMessage}\n\nGenerate a contextual response based on the tool results above. Use the rich context data to provide intelligent, adaptive feedback that follows your personality and guidelines.`,
+            },
+          ];
+
+          const contextualCompletion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: contextualMessages,
+            temperature: 0.8,
+            max_tokens: 400,
+          });
+
+          const contextualResponse =
+            contextualCompletion.choices[0]?.message?.content;
+          if (contextualResponse) {
+            response = contextualResponse;
           }
         }
       }

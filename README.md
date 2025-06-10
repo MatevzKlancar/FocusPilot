@@ -1,38 +1,41 @@
 # FocusPilot 🎯
 
-**FocusPilot** is an AI-powered productivity coach that helps you fight procrastination, set meaningful goals, and build sustainable habits. Turn your big ambitions into daily wins with personalized task breakdown, streak tracking, and motivational guidance.
+**FocusPilot** is an AI-powered productivity coach that helps entrepreneurs fight procrastination, set meaningful goals, and build sustainable habits. Turn your big ambitions into daily wins with personalized task breakdown, streak tracking, and brutal accountability.
+
+**This isn't another wishy-washy planning app that entrepreneurs use to avoid real work.** FocusPilot forces you to take action, talk to customers, and ship products that make money.
 
 ## ✨ Features
 
-### 🎯 **Smart Goal Management**
+### 🎯 **Entrepreneur-Focused Goal Management**
 
-- AI-powered goal discovery for when you're unsure what to work on
-- Automatic breakdown of big goals into manageable daily/weekly/monthly tasks
-- SMART goal formulation with realistic timelines
+- AI-powered business goal breakdown for MVPs, customer acquisition, and revenue generation
+- Automatic task breakdown that forces customer contact and revenue focus
+- No fluff goals - only business activities that move the needle
 
-### 📅 **Intelligent Task Scheduling**
+### 📅 **Revenue-Driven Task Scheduling**
 
-- Daily task recommendations based on your goals
-- Recurring habits and one-time milestones
-- Automatic task prioritization and scheduling
+- Daily customer conversation requirements
+- Shipping deadlines that can't be ignored
+- Revenue-focused task prioritization (customers > features > planning)
 
-### 🔥 **Streak Tracking & Motivation**
+### 🔥 **Brutal Accountability Tracking**
 
-- Visual streak counter to maintain momentum
-- Motivational messages and celebration of progress
-- Recovery guidance when streaks are broken
+- Days since last customer conversation counter
+- Streak tracking for revenue activities and shipping
+- No participation trophies - only results matter
 
-### 🤖 **AI Productivity Coach**
+### 🤖 **Hardcore Business Coach**
 
-- Personalized coaching via chat interface
-- Real-time task completion feedback
-- Goal adjustment recommendations based on progress
+- Drill sergeant AI that calls out procrastination and excuse-making
+- Real-time feedback on customer acquisition and revenue progress
+- Forces entrepreneurs to ship imperfect products rather than perfect plans
 
-### 📊 **Progress Analytics**
+### 📊 **Business-Critical Analytics**
 
-- Goal completion tracking
-- Habit formation insights
-- Performance trends and patterns
+- Customer interaction frequency tracking
+- Revenue task completion rates
+- Shipping velocity and execution metrics
+- Anti-planning, pro-action bias in all reporting
 
 ## 🏗️ Technical Architecture
 
@@ -187,10 +190,22 @@ pnpm db:stop          # Stop Supabase
 
 FocusPilot is designed to be:
 
-- **Supportive** - Always encouraging, never judgmental
-- **Action-oriented** - Focuses on next steps and practical advice
-- **Motivational** - Uses positive language and celebrates progress
-- **Smart** - Breaks big goals into realistic, achievable tasks
+- **Brutally Honest** - Calls out procrastination and excuse-making immediately
+- **Revenue-Obsessed** - Every task must connect to customers, revenue, or shipping
+- **Anti-Planning** - Forces action over endless strategizing and flowcharts
+- **Execution-Focused** - Ships imperfect products rather than perfect plans
+- **Customer-Centric** - Demands daily customer contact and validation
+
+### Entrepreneur Goal Types
+
+FocusPilot includes specialized goal breakdown strategies for entrepreneurs:
+
+- **MVP Launch** - Daily development + customer validation + shipping deadlines
+- **Customer Acquisition** - Daily outreach + conversion optimization + metrics tracking
+- **Revenue Generation** - Sales activities + pricing tests + financial goal tracking
+- **Product Validation** - User interviews + analytics setup + product-market fit assessment
+
+Each goal type automatically generates time-based tasks that eliminate excuses and force consistent progress toward real business outcomes.
 
 ## 🔌 API Endpoints
 

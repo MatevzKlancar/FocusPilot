@@ -75,10 +75,8 @@ export class FocusPilotAgent {
                 result,
               });
 
-              // Add tool result to the response message
-              if (result.message) {
-                response.message += `\n\n${result.message}`;
-              }
+              // Tools now return contextual data instead of pre-written messages
+              // The API layer will handle contextual response generation
             } catch (error) {
               console.error(
                 `Tool execution error for ${toolCall.function.name}:`,
