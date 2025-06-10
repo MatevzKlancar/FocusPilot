@@ -1,6 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { ChatRequestSchema } from "@focuspilot/types";
+import { FocusPilotAgent } from "@focuspilot/lib-openai";
+import { createOpenAIClient } from "@focuspilot/lib-openai";
+import { GoalsService, TasksService, getDefaultClient } from "@focuspilot/db";
 
 export const chatRouter = new Hono();
 
@@ -10,12 +13,29 @@ chatRouter.post("/", zValidator("json", ChatRequestSchema), async (c) => {
     const auth = c.get("auth");
     const { message } = c.req.valid("json");
 
-    // For now, return a simple response
-    // TODO: Integrate with FocusPilotAgent
+    // Initialize services and agent
+    const supabaseClient = getDefaultClient();
+    const goalsService = new GoalsService(supabaseClient);
+    const tasksService = new TasksService(supabaseClient);
+
+    const openaiClient = createOpenAIClient({
+      apiKey: process.env.OPENAI_API_KEY || "",
+    });
+
+    const agent = new FocusPilotAgent(openaiClient, {
+      userId: auth.userId,
+      goalsService,
+      tasksService,
+    });
+
+    // Process the message with the AI agent
+    const response = await agent.processMessage(message);
+
     return c.json({
       success: true,
       data: {
-        message: `Thanks for your message: "${message}". I'm FocusPilot, your AI productivity coach. Let me help you achieve your goals!`,
+        message: response.message,
+        toolCalls: response.toolCalls,
         timestamp: new Date().toISOString(),
       },
     });

@@ -3,7 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { MessageCircle, Send, Sparkles, ArrowLeft, Target } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  Sparkles,
+  ArrowLeft,
+  Target,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 
 interface Message {
   id: string;
@@ -35,7 +43,7 @@ export default function CoachPage() {
       id: "1",
       role: "assistant",
       content:
-        "Hey there! 👋 I'm your FocusPilot AI coach. I'm here to help you achieve your goals, stay motivated, and build amazing habits! What's on your mind today?",
+        "Listen up. I'm your FocusPilot drill sergeant, and I'm here to get your lazy ass in gear. No more excuses, no more 'tomorrow' bullshit. You want to achieve something real? Then it's time to stop talking and start doing. What goal are you ready to actually work on, or are you just here to waste both our time?",
       timestamp: new Date(),
     };
     setMessages([welcomeMessage]);
@@ -170,6 +178,59 @@ export default function CoachPage() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  // Component to render goal/task creation results
+  const GoalCreatedCard = ({ goal, tasks }: { goal: any; tasks: any[] }) => (
+    <div className="mt-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
+      <div className="flex items-center space-x-2 mb-3">
+        <Target className="h-5 w-5 text-red-600" />
+        <h3 className="font-semibold text-red-900">GOAL LOCKED IN</h3>
+      </div>
+      <p className="text-red-800 font-medium mb-3">{goal.title}</p>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-red-700">YOUR DAILY TASKS:</p>
+        {tasks.slice(0, 3).map((task, index) => (
+          <div key={index} className="flex items-center space-x-2 text-sm">
+            <Clock className="h-4 w-4 text-red-500" />
+            <span className="text-red-700">{task.title}</span>
+            {task.is_recurring && (
+              <span className="text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full">
+                {task.cadence}
+              </span>
+            )}
+          </div>
+        ))}
+        {tasks.length > 3 && (
+          <p className="text-xs text-red-600">
+            ...and {tasks.length - 3} more tasks
+          </p>
+        )}
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-red-200">
+        <p className="text-xs text-red-600 font-medium">
+          NO EXCUSES. START TODAY.
+        </p>
+      </div>
+    </div>
+  );
+
+  // Enhanced message parsing to detect goal creation
+  const parseMessageForGoalCreation = (
+    content: string
+  ): { goal: any; tasks: any[] } | null => {
+    // Look for patterns that indicate goal creation
+    if (
+      content.includes("Goal created with") ||
+      content.includes("time-based tasks")
+    ) {
+      // This would be enhanced to parse actual goal/task data from the AI response
+      // For now, return null but the structure is ready
+      return null;
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -214,10 +275,10 @@ export default function CoachPage() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">
-                  Your AI Productivity Coach
+                  Your AI Drill Sergeant
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Here to help you achieve your goals and build great habits
+                  Here to crush your excuses and force you to get shit done
                 </p>
               </div>
             </div>
@@ -245,6 +306,23 @@ export default function CoachPage() {
                     <p className="text-sm whitespace-pre-wrap">
                       {message.content}
                     </p>
+
+                    {/* Show goal creation card for assistant messages */}
+                    {message.role === "assistant" &&
+                      (() => {
+                        const goalData = parseMessageForGoalCreation(
+                          message.content
+                        );
+                        return (
+                          goalData && (
+                            <GoalCreatedCard
+                              goal={goalData.goal}
+                              tasks={goalData.tasks || []}
+                            />
+                          )
+                        );
+                      })()}
+
                     <p
                       className={`text-xs mt-1 ${
                         message.role === "user"
@@ -295,7 +373,7 @@ export default function CoachPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything about goals, motivation, habits, or productivity..."
+                  placeholder="Tell me what you're avoiding or making excuses about..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   rows={2}
                   disabled={loading}
@@ -314,23 +392,59 @@ export default function CoachPage() {
             <div className="flex flex-wrap gap-2 mt-3">
               <button
                 onClick={() =>
-                  setInput("I'm feeling unmotivated today, can you help?")
+                  setInput("I'm being a lazy piece of shit today, call me out")
                 }
                 className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
               >
-                Need motivation 💪
+                I'm being weak 💀
               </button>
               <button
-                onClick={() => setInput("How do I build better habits?")}
+                onClick={() =>
+                  setInput("Stop me from making excuses and get me moving")
+                }
                 className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
               >
-                Build habits 🌱
+                Crush my excuses ⚡
               </button>
               <button
-                onClick={() => setInput("Help me break down a big goal")}
+                onClick={() =>
+                  setInput("Make this goal so simple I can't fail")
+                }
                 className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
               >
-                Break down goals 🎯
+                Break it down hard 🔨
+              </button>
+              <button
+                onClick={() =>
+                  setInput("I want to create an app but keep procrastinating")
+                }
+                className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition-colors"
+              >
+                App Development 📱
+              </button>
+              <button
+                onClick={() =>
+                  setInput("I want to get fit but keep making excuses")
+                }
+                className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition-colors"
+              >
+                Get Fit 💪
+              </button>
+              <button
+                onClick={() =>
+                  setInput("I want to learn a new skill but never start")
+                }
+                className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition-colors"
+              >
+                Learn Skills 🎓
+              </button>
+              <button
+                onClick={() =>
+                  setInput("I want to build better habits but always quit")
+                }
+                className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition-colors"
+              >
+                Build Habits 🔄
               </button>
             </div>
           </div>

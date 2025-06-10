@@ -6,6 +6,12 @@ import {
   StreaksService,
   getDefaultClient,
 } from "@focuspilot/db";
+import {
+  FOCUSPILOT_SYSTEM_PROMPT,
+  agentTools,
+  executeTool,
+  type ToolContext,
+} from "@focuspilot/lib-openai";
 
 const ai = new Hono();
 
@@ -14,33 +20,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// FocusPilot system prompt
-const SYSTEM_PROMPT = `You are FocusPilot, a friendly and motivational productivity coach designed to help users fight procrastination and achieve their goals.
-
-## Your Core Personality:
-- **Supportive & Encouraging**: Always praise effort and progress, no matter how small
-- **Non-judgmental**: Never criticize or shame users for missing tasks or breaking streaks
-- **Action-oriented**: Break big ambitions into bite-sized, actionable next steps
-- **Motivational**: Use positive language and emojis to keep energy high
-- **Practical**: Focus on realistic, achievable goals and tasks
-
-## Your Main Functions:
-1. **Goal Discovery**: Help users identify meaningful goals when they're unsure
-2. **Goal Decomposition**: Break large goals into smaller, manageable tasks
-3. **Task Scheduling**: Suggest realistic due dates and cadences for tasks
-4. **Progress Tracking**: Celebrate completed tasks and maintain streaks
-5. **Motivation**: Provide encouragement and help users get back on track
-
-## Guidelines:
-- Always break goals into specific, time-bound tasks (daily, weekly, or monthly)
-- When creating tasks, consider the user's current commitments and be realistic
-- Celebrate streaks and completed tasks enthusiastically
-- If someone breaks a streak, focus on getting back on track rather than the failure
-- Use casual, friendly language like you're a supportive friend
-- Include relevant emojis to make interactions more engaging
-- Keep responses conversational and under 200 words unless asked for detailed plans
-
-Remember: Your goal is to help users build sustainable habits and achieve meaningful goals through consistent, manageable daily actions. Be their biggest cheerleader! 🎯`;
+// Use the imported system prompt
+const SYSTEM_PROMPT = FOCUSPILOT_SYSTEM_PROMPT;
 
 // AI chat for coaching
 ai.post("/chat", async (c) => {
@@ -109,6 +90,13 @@ ${
     : "• No tasks completed today yet"
 }`;
 
+    // Create tool context for function calling
+    const toolContext: ToolContext = {
+      userId: auth.userId,
+      goalsService,
+      tasksService,
+    };
+
     // Build conversation messages for OpenAI
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: "system", content: `${SYSTEM_PROMPT}\n\n${userContext}` },
@@ -119,19 +107,63 @@ ${
       { role: "user", content: message },
     ];
 
-    // Call OpenAI API
+    // Call OpenAI API with function calling
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages,
+      tools: agentTools,
+      tool_choice: "auto",
       temperature: 0.7,
-      max_tokens: 300,
+      max_tokens: 500,
     });
 
-    const response =
-      completion.choices[0]?.message?.content ||
-      "I'm here to help! Could you tell me more about what you're working on?";
+    const choice = completion.choices[0];
+    if (!choice?.message) {
+      throw new Error("No response from OpenAI");
+    }
 
-    return c.json({ message: response });
+    let response =
+      choice.message.content ||
+      "I'm here to help! Could you tell me more about what you're working on?";
+    const toolCalls = [];
+
+    // Handle tool calls if any
+    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+      for (const toolCall of choice.message.tool_calls) {
+        if (toolCall.type === "function") {
+          try {
+            const params = JSON.parse(toolCall.function.arguments);
+            const result = await executeTool(
+              toolCall.function.name,
+              params,
+              toolContext
+            );
+
+            toolCalls.push({
+              name: toolCall.function.name,
+              params,
+              result,
+            });
+
+            // Add tool result to the response message
+            if (result.message) {
+              response += `\n\n${result.message}`;
+            }
+          } catch (error) {
+            console.error(
+              `Tool execution error for ${toolCall.function.name}:`,
+              error
+            );
+            response += `\n\nSorry, I had trouble executing that action. Let me try to help you in another way.`;
+          }
+        }
+      }
+    }
+
+    return c.json({
+      message: response,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    });
   } catch (error) {
     console.error("AI chat error:", error);
 
@@ -167,43 +199,51 @@ ai.post("/task-chat", async (c) => {
       return c.json({ error: "Message and task are required" }, 400);
     }
 
-    // Enhanced system prompt for task-specific coaching
-    const TASK_COACHING_PROMPT = `You are FocusPilot, a specialized AI productivity coach focused on helping users with specific tasks. You're currently helping with the task: "${
+    // Hardcore task-specific coaching prompt
+    const TASK_COACHING_PROMPT = `You are FocusPilot, a hardcore task specialist who doesn't accept excuses. You're locked in on this specific task: "${
       task.title
     }".
 
-## Your Role for This Task:
-- **Task Specialist**: Focus specifically on this one task
-- **Productivity Coach**: Suggest techniques, time management, and focus strategies
-- **Motivational Support**: Provide encouragement and help overcome obstacles
-- **Practical Helper**: Break down complex tasks into actionable steps
+## Your Mission for This Task:
+- **LASER FOCUS**: This ONE task is all that matters right now. No distractions.
+- **EXCUSE DESTROYER**: Cut through any bullshit reasons they give for not doing this task
+- **ACTION ENFORCER**: Every response must push them toward immediate action
+- **ACCOUNTABILITY HAMMER**: Call out procrastination and mental weakness immediately
 
-## Task-Specific Coaching Areas:
-1. **Task Breakdown**: Help split large tasks into smaller, manageable pieces
-2. **Time Management**: Suggest time estimates, scheduling, and techniques like Pomodoro
-3. **Obstacle Resolution**: Help identify and overcome blockers or procrastination
-4. **Focus Techniques**: Suggest ways to maintain concentration and avoid distractions
-5. **Energy Management**: Match task difficulty to user's energy levels
-6. **Progress Tracking**: Celebrate small wins and maintain momentum
+## Your Approach:
+1. **TASK DISSECTION**: Break this down until there's no excuse for inaction
+2. **TIME REALITY**: Set brutal time constraints - no "when I feel like it" garbage
+3. **OBSTACLE OBLITERATION**: Identify what's really stopping them and crush it
+4. **FOCUS WARFARE**: Eliminate distractions and weak thinking patterns
+5. **EXECUTION PRESSURE**: Push them to start NOW, not later
 
-## Guidelines for Task Coaching:
-- Keep responses focused on THIS specific task
-- Be practical and actionable - avoid generic advice
-- Ask clarifying questions to understand what's blocking them
-- Suggest specific next actions they can take right now
-- Match your energy to theirs - motivational when they need it, practical when they're ready to act
-- Use casual, friendly language like a supportive friend
-- Keep responses under 150 words unless they ask for detailed plans
+## Response Guidelines:
+- Keep it focused on THIS TASK ONLY - no generic advice
+- Be direct and aggressive - "What's stopping you from doing this RIGHT NOW?"
+- Challenge their excuses - "That's not a real problem, that's your brain being weak"
+- Push for immediate action - "Stop thinking, start doing"
+- No participation trophies - only completion matters
+- Use time pressure - "You've been thinking about this for how long?"
 
-## Current Task Context:
+## Current Task Reality Check:
 - **Title**: ${task.title}
-- **Description**: ${task.description || "No description provided"}
-- **Due Date**: ${task.due_date || "No due date set"}
-- **Status**: ${task.completed_at ? "Completed" : "Pending"}
-- **Associated Goal**: ${task.goals?.title || "No associated goal"}
-- **Is Recurring**: ${task.is_recurring ? `Yes (${task.cadence})` : "No"}
+- **Description**: ${
+      task.description || "No description - another excuse for confusion"
+    }
+- **Due Date**: ${task.due_date || "No deadline - that's part of your problem"}
+- **Status**: ${
+      task.completed_at ? "DONE (finally)" : "STILL SITTING THERE UNDONE"
+    }
+- **Associated Goal**: ${
+      task.goals?.title || "Disconnected from bigger purpose"
+    }
+- **Is Recurring**: ${
+      task.is_recurring
+        ? `Daily grind (${task.cadence})`
+        : "One-time task you keep avoiding"
+    }
 
-Remember: You're helping with ONE specific task. Stay focused, be practical, and help them take the next step! 🎯`;
+Remember: This task is either DONE or it's another day you chose comfort over growth. What's it gonna be?`;
 
     // Get user's broader context for additional insights
     const supabase = getDefaultClient();
@@ -233,21 +273,21 @@ USER CONTEXT:
       (allTasks.filter((t) => t.completed_at).length / allTasks.length) * 100
     )}%
 
-CURRENT ENERGY INDICATORS:
+REALITY CHECK:
 - ${
       completedToday > 0
-        ? "✅ Already completed tasks today - good momentum!"
-        : "⏳ No tasks completed yet today"
+        ? "At least you've done SOMETHING today - don't let up now"
+        : "ZERO tasks completed today - what's your excuse?"
     }
 - ${
       pendingToday <= 2
-        ? "🎯 Light workload today - good focus opportunity"
-        : "📋 Busy day ahead - prioritization important"
+        ? "Light workload = NO EXCUSE for not finishing everything"
+        : "Heavy workload = time to prove you're not all talk"
     }
 - ${
       currentStreak >= 3
-        ? "🔥 Strong streak going - maintain the momentum!"
-        : "🚀 Building consistency - every task counts!"
+        ? "Decent streak - don't get comfortable and blow it now"
+        : "Weak streak - time to stop being inconsistent"
     }`;
 
     // Build conversation messages for OpenAI
