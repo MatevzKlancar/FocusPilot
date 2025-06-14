@@ -74,10 +74,25 @@ CURRENT USER STATUS:
       pendingTasks.length
     } pending)
 
+WORKFLOW DECISION GUIDE:
+${
+  pendingTasks.length > 0
+    ? "🔴 USER HAS PENDING TASKS - SHOW THESE, NO SETUP QUESTIONS"
+    : goals.length > 0
+    ? "🟡 USER HAS GOALS BUT NO TODAY TASKS - CHECK GOAL TASKS, NO SETUP QUESTIONS"
+    : "🟢 USER HAS NO GOALS/TASKS - GOAL CREATION ALLOWED"
+}
+
 ACTIVE GOALS:
-${goals
-  .map((goal) => `• ${goal.title}: ${goal.description || "No description"}`)
-  .join("\n")}
+${
+  goals.length > 0
+    ? goals
+        .map(
+          (goal) => `• ${goal.title}: ${goal.description || "No description"}`
+        )
+        .join("\n")
+    : "• No active goals"
+}
 
 TODAY'S PENDING TASKS:
 ${
@@ -90,7 +105,7 @@ ${
             } (Task ID: ${task.id})`
         )
         .join("\n")
-    : "• No pending tasks for today! Time to create some business-focused goals."
+    : "• No pending tasks for today"
 }
 
 TODAY'S COMPLETED TASKS:
@@ -102,7 +117,10 @@ ${
     : "• No tasks completed today yet"
 }
 
-IMPORTANT: 
+CRITICAL INSTRUCTIONS: 
+- If PENDING TASKS exist above: Show them what to work on, NO setup questions
+- If GOALS exist but no tasks: Use get_goal_tasks to check existing plans, NO setup questions  
+- Only ask setup questions if they have NO goals AND want something new
 - Only use the Task IDs shown in parentheses above when calling complete_task tool. Do not make up or guess task IDs.
 - NEVER include Task IDs or UUIDs in your responses to users. Users should never see database IDs.
 - When referencing tasks in your responses, use only the task title and description.`;

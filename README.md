@@ -1,65 +1,84 @@
 # FocusPilot 🎯
 
-**FocusPilot** is an AI-powered productivity coach that helps entrepreneurs fight procrastination, set meaningful goals, and build sustainable habits. Turn your big ambitions into daily wins with personalized task breakdown, streak tracking, and brutal accountability.
+**FocusPilot** is an AI-powered productivity coach that helps you turn ambitious goals into daily victories. Whether you're learning a new skill, building a business, getting fit, or developing better habits, FocusPilot provides personalized task breakdown, streak tracking, and motivational coaching to keep you on track.
 
-**This isn't another wishy-washy planning app that entrepreneurs use to avoid real work.** FocusPilot forces you to take action, talk to customers, and ship products that make money.
+## ✨ What FocusPilot Does
 
-## ✨ Features
+### 🧠 **Intelligent Goal Breakdown**
 
-### 🎯 **Entrepreneur-Focused Goal Management**
+Tell FocusPilot what you want to achieve, and it automatically creates a structured plan with:
 
-- AI-powered business goal breakdown for MVPs, customer acquisition, and revenue generation
-- Automatic task breakdown that forces customer contact and revenue focus
-- No fluff goals - only business activities that move the needle
+- **Daily tasks** that build momentum through consistency
+- **Weekly reviews** to track progress and adjust course
+- **Milestone achievements** to mark significant progress
+- **Time-based scheduling** based on your available commitment (15 minutes to 8 hours daily)
 
-### 📅 **Revenue-Driven Task Scheduling**
+### 📅 **Smart Task Management**
 
-- Daily customer conversation requirements
-- Shipping deadlines that can't be ignored
-- Revenue-focused task prioritization (customers > features > planning)
+- **Today's Focus**: See exactly what you need to work on today
+- **Recurring Tasks**: Daily and weekly habits that compound over time
+- **Progress Tracking**: Visual indicators of completion and momentum
+- **Flexible Scheduling**: Tasks adapt to your lifestyle and availability
 
-### 🔥 **Brutal Accountability Tracking**
+### 🔥 **Streak & Momentum Building**
 
-- Days since last customer conversation counter
-- Streak tracking for revenue activities and shipping
-- No participation trophies - only results matter
+- **Streak Tracking**: Visual counters that motivate consistency
+- **Daily Check-ins**: Mark tasks complete and build momentum
+- **Progress Analytics**: See your growth over time
+- **Motivational Coaching**: AI encouragement tailored to your progress
 
-### 🤖 **Hardcore Business Coach**
+### 🤖 **AI Productivity Coach**
 
-- Drill sergeant AI that calls out procrastination and excuse-making
-- Real-time feedback on customer acquisition and revenue progress
-- Forces entrepreneurs to ship imperfect products rather than perfect plans
+- **Personalized Guidance**: Coaching style adapts to your goal type
+- **Task Optimization**: AI suggests the most effective daily actions
+- **Accountability**: Gentle but firm reminders to stay on track
+- **Context-Aware**: Remembers your history and adjusts recommendations
 
-### 📊 **Business-Critical Analytics**
+## 🎯 Supported Goal Types
 
-- Customer interaction frequency tracking
-- Revenue task completion rates
-- Shipping velocity and execution metrics
-- Anti-planning, pro-action bias in all reporting
+FocusPilot provides specialized task breakdown strategies for different types of goals:
+
+### **Personal Development**
+
+- **Skill Learning**: Practice sessions, assessments, milestone projects
+- **Creative Projects**: Daily creation time, project planning, deliverables
+- **Fitness Goals**: Progressive training, baseline tracking, assessments
+- **Habit Building**: Environment setup, consistency tracking, habit strength checks
+- **Career Development**: Daily skill building, networking, portfolio projects
+- **Personal Growth**: Self-reflection, behavior change, mindset work
+
+### **Business & Entrepreneurship**
+
+- **MVP Launch**: Daily development, customer validation, shipping deadlines
+- **Customer Acquisition**: Outreach activities, conversion optimization, metrics
+- **Revenue Generation**: Sales activities, pricing optimization, financial tracking
+- **Product Validation**: User research, analytics setup, market feedback
+
+Each goal type gets a customized breakdown that eliminates guesswork and keeps you focused on what matters most.
 
 ## 🏗️ Technical Architecture
 
-### Tech Stack
+### Modern Tech Stack
 
-- **Frontend:** Next.js 15 (App Router), React 18, TypeScript, Tailwind CSS
-- **Backend:** Bun + Hono v4 (REST API + Server-Sent Events)
-- **Database:** Supabase (PostgreSQL + RLS + Auth)
-- **AI:** OpenAI GPT-4 with function calling for agent tools
-- **Monorepo:** pnpm workspaces + Turborepo
+- **Frontend**: Next.js 15 (App Router), React 18, TypeScript, Tailwind CSS
+- **Backend**: Bun + Hono v4 (REST API + Server-Sent Events)
+- **Database**: Supabase (PostgreSQL + Row Level Security + Auth)
+- **AI**: OpenAI GPT-4 with function calling for smart task management
+- **Monorepo**: pnpm workspaces + Turborepo for efficient development
 
 ### Project Structure
 
 ```
 apps/
-  api/                    # Bun + Hono server (REST + SSE)
-  web/                    # Next.js frontend (App Router)
+  api/                    # Bun + Hono server
+  web/                    # Next.js frontend
 packages/
-  db/                     # Supabase typed client + migration helpers
-  types/                  # Zod schemas & shared TS types
-  lib-openai/             # OpenAI agent tools and prompts
+  db/                     # Supabase client + services
+  types/                  # Zod schemas + shared types
+  lib-openai/             # AI agent tools + prompts
 supabase/
-  migrations/             # SQL migration files
-  seed.sql               # Development seed data
+  migrations/             # SQL files
+  seed.sql               # Development data
 ```
 
 ## 🚀 Quick Start
@@ -85,8 +104,7 @@ pnpm install
 # Copy environment template
 cp env.example .env.local
 
-# Edit with your credentials
-# You'll need:
+# Edit with your credentials:
 # - Supabase project credentials
 # - OpenAI API key
 ```
@@ -167,7 +185,7 @@ pnpm db:stop          # Stop Supabase
 ### Core Tables
 
 - **`goals`** - User goals with titles, descriptions, and target dates
-- **`tasks`** - Individual tasks linked to goals with due dates and recurrence
+- **`tasks`** - Individual tasks linked to goals with due dates and recurrence settings
 - **`streaks`** - User streak tracking with current and best streaks
 
 ### Key Features
@@ -177,41 +195,41 @@ pnpm db:stop          # Stop Supabase
 - **Streak Triggers** - Automatic streak updates when tasks are completed
 - **Helper Functions** - `get_today_tasks()`, `update_streak()`, etc.
 
-## 🤖 AI Agent System
+## 🤖 AI System
 
 ### Available Tools
 
-- **`create_goal`** - Create new goals from user conversations
-- **`create_task`** - Break goals into specific, actionable tasks
-- **`complete_task`** - Mark tasks as done and update streaks
-- **`get_today_tasks`** - Retrieve today's focus items for context
+- **`create_goal_with_breakdown`** - Creates goals with automatic task breakdown
+- **`create_task`** - Adds individual tasks to existing goals
+- **`complete_task`** - Marks tasks as done and updates streaks
+- **`get_today_tasks`** - Retrieves today's focus items
+- **`get_goal_tasks`** - Shows all tasks for a specific goal
 
-### Agent Personality
+### How It Works
 
-FocusPilot is designed to be:
+1. **Goal Analysis**: AI analyzes your goal and determines the best breakdown strategy
+2. **Task Generation**: Creates daily, weekly, and milestone tasks based on goal type
+3. **Progress Tracking**: Monitors completion and adjusts recommendations
+4. **Coaching**: Provides motivational guidance tailored to your progress style
 
-- **Brutally Honest** - Calls out procrastination and excuse-making immediately
-- **Revenue-Obsessed** - Every task must connect to customers, revenue, or shipping
-- **Anti-Planning** - Forces action over endless strategizing and flowcharts
-- **Execution-Focused** - Ships imperfect products rather than perfect plans
-- **Customer-Centric** - Demands daily customer contact and validation
+### Example Breakdown
 
-### Entrepreneur Goal Types
+**Goal**: "Learn Spanish in 6 months"
+**Daily Time**: 30 minutes
 
-FocusPilot includes specialized goal breakdown strategies for entrepreneurs:
+**Generated Tasks**:
 
-- **MVP Launch** - Daily development + customer validation + shipping deadlines
-- **Customer Acquisition** - Daily outreach + conversion optimization + metrics tracking
-- **Revenue Generation** - Sales activities + pricing tests + financial goal tracking
-- **Product Validation** - User interviews + analytics setup + product-market fit assessment
-
-Each goal type automatically generates time-based tasks that eliminate excuses and force consistent progress toward real business outcomes.
+- Daily: "Practice Spanish - 30 minutes" (recurring)
+- Daily: "Complete Duolingo lesson" (recurring)
+- Weekly: "Spanish conversation practice" (recurring)
+- Milestone: "Complete beginner course" (due in 30 days)
+- Milestone: "Hold 5-minute conversation" (due in 60 days)
 
 ## 🔌 API Endpoints
 
 ### Authentication
 
-All API endpoints require a valid Supabase JWT token in the Authorization header:
+All API endpoints require a valid Supabase JWT token:
 
 ```
 Authorization: Bearer <supabase_jwt_token>
@@ -232,7 +250,7 @@ POST   /api/tasks/:id/complete # Mark task complete
 
 GET    /api/streaks            # Get user streak data
 
-POST   /api/chat               # Chat with AI agent (SSE stream)
+POST   /api/ai/chat            # Chat with AI coach
 ```
 
 ## 🧪 Testing
@@ -253,10 +271,9 @@ npm test
 
 ### Database Tests
 
-Test the streak logic and SQL functions:
+Test SQL functions and triggers:
 
-```bash
-# In Supabase dashboard or psql
+```sql
 SELECT * FROM get_today_tasks('user-uuid');
 ```
 
@@ -282,6 +299,29 @@ bun build src/index.ts --outdir dist --target bun
 cd apps/web
 npx vercel deploy
 ```
+
+## 🎨 Key Features in Action
+
+### Daily Workflow
+
+1. **Morning Check-in**: See today's tasks and current streak
+2. **Task Execution**: Work through your personalized daily actions
+3. **Progress Tracking**: Mark tasks complete as you finish them
+4. **Evening Review**: Reflect on progress and prepare for tomorrow
+
+### Goal Management
+
+1. **Goal Creation**: Tell FocusPilot what you want to achieve
+2. **Time Commitment**: Specify how much time you can dedicate daily
+3. **Automatic Breakdown**: Get a structured plan with daily/weekly tasks
+4. **Progress Monitoring**: Track completion rates and streak building
+
+### AI Coaching
+
+1. **Contextual Guidance**: Coaching adapts to your goal type and progress
+2. **Motivational Support**: Encouragement tailored to your current momentum
+3. **Task Optimization**: Suggestions for more effective daily actions
+4. **Accountability**: Gentle reminders to maintain consistency
 
 ## 🤝 Contributing
 
@@ -309,13 +349,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Supabase** for the amazing backend-as-a-service platform
-- **OpenAI** for the powerful GPT models
+- **OpenAI** for the powerful GPT models that make intelligent coaching possible
 - **Hono** for the lightning-fast web framework
 - **Next.js** for the excellent React framework
 - **Bun** for the fast JavaScript runtime
 
 ---
 
-**Built with ❤️ by the FocusPilot team**
+**Built with ❤️ for ambitious people who want to turn their goals into reality** 🎯
 
-_Transform your productivity, one task at a time._ 🎯
+_Transform your productivity, one task at a time._
