@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Target, ArrowLeft, Calendar } from "lucide-react";
 
-export default function NewTaskPage() {
+function NewTaskForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -272,5 +272,13 @@ export default function NewTaskPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function NewTaskPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewTaskForm />
+    </Suspense>
   );
 }

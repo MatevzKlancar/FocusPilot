@@ -292,6 +292,65 @@ export default async function DashboardPage() {
             </div>
           )}
 
+          {/* Coming Soon: Specialized Agents */}
+          <div className="card mt-8 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                🚀 Specialized AI Coaches Coming Soon
+              </h3>
+              <p className="text-gray-700 mb-6">
+                We're building specialized agents for different goal types. Each
+                with their own expertise and coaching style.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-2xl mb-2">🏋️</div>
+                  <h4 className="font-semibold text-gray-900 mb-1">
+                    Performance Coach
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Elite athletic mindset for fitness and performance goals
+                  </p>
+                  <span className="inline-block mt-2 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                    Coming Soon
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <h4 className="font-semibold text-gray-900 mb-1">
+                    Master Craftsman
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Deep work specialist for skill mastery and creativity
+                  </p>
+                  <span className="inline-block mt-2 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                    Coming Soon
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-2xl mb-2">⚙️</div>
+                  <h4 className="font-semibold text-gray-900 mb-1">
+                    Systems Engineer
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Habit architect for sustainable behavior change
+                  </p>
+                  <span className="inline-block mt-2 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                💡 For now, enjoy our hardcore App Builder agent - perfect for
+                entrepreneurs and product builders
+              </p>
+            </div>
+          </div>
+
           {/* Bottom Message */}
           <div className="card mt-8 bg-gray-900 text-white">
             <div className="text-center">

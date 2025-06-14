@@ -1,24 +1,21 @@
 import OpenAI from "openai";
 import type { OpenAIClient } from "./client.js";
 import { agentTools, executeTool, type ToolContext } from "./tools.js";
-import { FOCUSPILOT_SYSTEM_PROMPT } from "./prompts.js";
+import {
+  selectAgentForGoalTypes,
+  getAgent,
+  appBuilderConfig,
+  type AgentType,
+  type AgentMessage,
+  type AgentResponse,
+} from "./agents/index.js";
 
-export interface AgentMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-  timestamp?: Date;
-}
-
-export interface AgentResponse {
-  message: string;
-  toolCalls?: Array<{
-    name: string;
-    params: any;
-    result: any;
-  }>;
-}
+// TODO: Implement agent context and goal-based selection
+// For now, we'll use the app-builder agent as default
 
 export class FocusPilotAgent {
+  private currentAgentId: AgentType = "app-builder"; // TODO: Make this dynamic based on user goals
+
   constructor(
     private openaiClient: OpenAIClient,
     private toolContext: ToolContext
@@ -28,8 +25,11 @@ export class FocusPilotAgent {
     userMessage: string,
     conversationHistory: AgentMessage[] = []
   ): Promise<AgentResponse> {
+    // TODO: Select agent based on user's goal types from context
+    const currentAgent = getAgent(this.currentAgentId) || appBuilderConfig;
+
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: FOCUSPILOT_SYSTEM_PROMPT },
+      { role: "system", content: currentAgent.systemPrompt },
       ...conversationHistory.map((msg) => ({
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content,
@@ -54,6 +54,7 @@ export class FocusPilotAgent {
 
       const response: AgentResponse = {
         message: choice.message.content || "",
+        agentId: this.currentAgentId,
         toolCalls: [],
       };
 
@@ -94,6 +95,7 @@ export class FocusPilotAgent {
       return {
         message:
           "I'm having some technical difficulties right now. Please try again in a moment.",
+        agentId: this.currentAgentId,
       };
     }
   }
@@ -102,8 +104,11 @@ export class FocusPilotAgent {
     userMessage: string,
     conversationHistory: AgentMessage[] = []
   ): Promise<AsyncIterable<string>> {
+    // TODO: Select agent based on user's goal types from context
+    const currentAgent = getAgent(this.currentAgentId) || appBuilderConfig;
+
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: FOCUSPILOT_SYSTEM_PROMPT },
+      { role: "system", content: currentAgent.systemPrompt },
       ...conversationHistory.map((msg) => ({
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content,

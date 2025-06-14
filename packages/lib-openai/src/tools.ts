@@ -36,6 +36,10 @@ export const completeTaskToolParams = z.object({
 
 export const getTodayTasksToolParams = z.object({});
 
+export const getGoalTasksToolParams = z.object({
+  goal_id: z.string().uuid().describe("ID of the goal to get tasks for"),
+});
+
 export const createGoalWithBreakdownToolParams = z.object({
   title: z.string().min(1).max(255).describe("The title of the goal"),
   description: z
@@ -163,6 +167,25 @@ export const agentTools = [
   {
     type: "function" as const,
     function: {
+      name: "get_goal_tasks",
+      description:
+        "Get all tasks for a specific goal. Use this to check what tasks already exist before creating new ones.",
+      parameters: {
+        type: "object",
+        properties: {
+          goal_id: {
+            type: "string",
+            format: "uuid",
+            description: "ID of the goal to get tasks for",
+          },
+        },
+        required: ["goal_id"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "create_goal_with_breakdown",
       description:
         "Create a goal and automatically break it down into time-based daily/weekly tasks. Use this when user wants to achieve something but needs a structured plan.",
@@ -271,6 +294,56 @@ export async function executeCreateTask(
   params: z.infer<typeof createTaskToolParams>,
   context: ToolContext
 ) {
+  // Get all existing tasks for this goal first to check for duplicates
+  const allTasks = await context.tasksService.getAll(context.userId);
+  const goalTasks = allTasks.filter((t) => t.goal_id === params.goal_id);
+
+  // Check for duplicate tasks (same title or very similar title for same goal and date)
+  const normalizeTitle = (title: string) =>
+    title
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .trim();
+
+  const newTaskTitle = normalizeTitle(params.title);
+  const duplicateTask = goalTasks.find((task) => {
+    const existingTitle = normalizeTitle(task.title);
+    // Check for exact match or very similar title on same date
+    return (
+      (existingTitle === newTaskTitle ||
+        existingTitle.includes(newTaskTitle) ||
+        newTaskTitle.includes(existingTitle)) &&
+      task.due_date === params.due_date
+    );
+  });
+
+  if (duplicateTask) {
+    // Return info about existing task instead of creating a duplicate
+    const goal = await context.goalsService.getById(
+      params.goal_id,
+      context.userId
+    );
+
+    return {
+      success: false,
+      action: "duplicate_task_detected",
+      data: {
+        message: "A similar task already exists for this goal and date",
+        existing_task: duplicateTask,
+        goal,
+        user_context: {
+          total_tasks_for_goal: goalTasks.length,
+          pending_tasks_today: allTasks.filter(
+            (t) =>
+              t.due_date === new Date().toISOString().split("T")[0] &&
+              !t.completed_at
+          ).length,
+        },
+      },
+    };
+  }
+
+  // Create the task only if no duplicate exists
   const task = await context.tasksService.create({
     goal_id: params.goal_id,
     user_id: context.userId,
@@ -279,12 +352,10 @@ export async function executeCreateTask(
   });
 
   // Get goal context for AI response
-  const [goal, allTasks] = await Promise.all([
-    context.goalsService.getById(params.goal_id, context.userId),
-    context.tasksService.getAll(context.userId),
-  ]);
-
-  const goalTasks = allTasks.filter((t) => t.goal_id === params.goal_id);
+  const goal = await context.goalsService.getById(
+    params.goal_id,
+    context.userId
+  );
 
   return {
     success: true,
@@ -293,13 +364,15 @@ export async function executeCreateTask(
       task,
       goal,
       user_context: {
-        total_tasks_for_goal: goalTasks.length,
-        is_first_task_for_goal: goalTasks.length === 1,
-        pending_tasks_today: allTasks.filter(
-          (t) =>
-            t.due_date === new Date().toISOString().split("T")[0] &&
-            !t.completed_at
-        ).length,
+        total_tasks_for_goal: goalTasks.length + 1, // Include the newly created task
+        is_first_task_for_goal: goalTasks.length === 0,
+        pending_tasks_today:
+          allTasks.filter(
+            (t) =>
+              t.due_date === new Date().toISOString().split("T")[0] &&
+              !t.completed_at
+          ).length +
+          (params.due_date === new Date().toISOString().split("T")[0] ? 1 : 0),
       },
     },
   };
@@ -475,10 +548,100 @@ export async function executeGetTodayTasks(
   };
 }
 
+export async function executeGetGoalTasks(
+  params: z.infer<typeof getGoalTasksToolParams>,
+  context: ToolContext
+) {
+  const allTasks = await context.tasksService.getAll(context.userId);
+  const goalTasks = allTasks.filter((t) => t.goal_id === params.goal_id);
+
+  // Get goal information
+  const goal = await context.goalsService.getById(
+    params.goal_id,
+    context.userId
+  );
+
+  const completedCount = goalTasks.filter((t) => t.completed_at).length;
+  const pendingCount = goalTasks.filter((t) => !t.completed_at).length;
+
+  // Analyze task types for this goal
+  const today = new Date().toISOString().split("T")[0];
+  const todayTasks = goalTasks.filter((t) => t.due_date === today);
+  const overdueTasks = goalTasks.filter(
+    (t) => t.due_date && t.due_date < today && !t.completed_at
+  );
+  const futureTasks = goalTasks.filter((t) => t.due_date && t.due_date > today);
+
+  return {
+    success: true,
+    action: "goal_tasks_retrieved",
+    data: {
+      goal,
+      tasks: goalTasks,
+      user_context: {
+        goal_progress: {
+          total_tasks: goalTasks.length,
+          completed: completedCount,
+          pending: pendingCount,
+          completion_rate:
+            goalTasks.length > 0
+              ? Math.round((completedCount / goalTasks.length) * 100)
+              : 0,
+        },
+        task_breakdown: {
+          today_tasks: todayTasks.length,
+          overdue_tasks: overdueTasks.length,
+          future_tasks: futureTasks.length,
+          has_recurring_tasks: goalTasks.some((t) => t.is_recurring),
+        },
+        existing_task_titles: goalTasks.map((t) => t.title),
+      },
+    },
+  };
+}
+
 export async function executeCreateGoalWithBreakdown(
   params: z.infer<typeof createGoalWithBreakdownToolParams>,
   context: ToolContext
 ) {
+  // Check if a similar goal already exists to prevent duplicates
+  const existingGoals = await context.goalsService.getAll(context.userId);
+  const normalizeTitle = (title: string) =>
+    title
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .trim();
+
+  const newGoalTitle = normalizeTitle(params.title);
+  const duplicateGoal = existingGoals.find((goal) => {
+    const existingTitle = normalizeTitle(goal.title);
+    return (
+      existingTitle === newGoalTitle ||
+      existingTitle.includes(newGoalTitle) ||
+      newGoalTitle.includes(existingTitle)
+    );
+  });
+
+  if (duplicateGoal) {
+    // Return info about existing goal instead of creating a duplicate
+    const allTasks = await context.tasksService.getAll(context.userId);
+    const goalTasks = allTasks.filter((t) => t.goal_id === duplicateGoal.id);
+
+    return {
+      success: false,
+      action: "duplicate_goal_detected",
+      data: {
+        message: "A similar goal already exists",
+        existing_goal: duplicateGoal,
+        existing_tasks: goalTasks,
+        user_context: {
+          total_goals: existingGoals.length,
+          total_tasks_for_goal: goalTasks.length,
+        },
+      },
+    };
+  }
+
   // Create the main goal first
   const goal = await context.goalsService.create({
     user_id: context.userId,
@@ -1152,6 +1315,9 @@ export async function executeTool(
         getTodayTasksToolParams.parse(params),
         context
       );
+
+    case "get_goal_tasks":
+      return executeGetGoalTasks(getGoalTasksToolParams.parse(params), context);
 
     case "create_goal_with_breakdown":
       return executeCreateGoalWithBreakdown(

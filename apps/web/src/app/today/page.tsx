@@ -14,6 +14,7 @@ import {
   X,
   Send,
 } from "lucide-react";
+import { MarkdownText } from "@/components/markdown-text";
 
 export default function TodayPage() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -466,9 +467,10 @@ What's on your mind about this task?`,
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                    <MarkdownText
+                      content={message.content}
+                      className="text-sm whitespace-pre-wrap"
+                    />
                   </div>
                 </div>
               ))}

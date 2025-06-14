@@ -16,6 +16,8 @@ import {
   MessageSquare,
   Calendar,
 } from "lucide-react";
+import { AgentSelector } from "@/components/agent-selector";
+import { MarkdownText } from "@/components/markdown-text";
 
 interface Message {
   id: string;
@@ -49,6 +51,7 @@ export default function CoachPage() {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentAgentId, setCurrentAgentId] = useState("app-builder"); // TODO: Make dynamic based on user goals
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -492,13 +495,23 @@ export default function CoachPage() {
                 </div>
               </div>
 
-              {userContext && (
-                <div className="hidden md:flex items-center space-x-4 text-sm text-gray-600">
-                  <span>🎯 {userContext.goals} Goals</span>
-                  <span>✅ {userContext.completedTasks} Completed</span>
-                  <span>🔥 {userContext.currentStreak} Day Streak</span>
+              <div className="flex items-center space-x-4">
+                {/* Mobile Agent Selector */}
+                <div className="md:hidden">
+                  <AgentSelector
+                    currentAgentId={currentAgentId}
+                    onAgentChange={setCurrentAgentId}
+                  />
                 </div>
-              )}
+
+                {userContext && (
+                  <div className="hidden md:flex items-center space-x-4 text-sm text-gray-600">
+                    <span>🎯 {userContext.goals} Goals</span>
+                    <span>✅ {userContext.completedTasks} Completed</span>
+                    <span>🔥 {userContext.currentStreak} Day Streak</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -508,17 +521,27 @@ export default function CoachPage() {
           {/* Chat Header */}
           <div className="bg-gradient-to-r from-primary-50 to-secondary-50 p-4 border-b">
             <div className="container mx-auto">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
-                  <Sparkles className="h-6 w-6 text-white" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-semibold text-gray-900">
+                      Your AI Drill Sergeant
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      Here to crush your excuses and force you to get shit done
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    Your AI Drill Sergeant
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    Here to crush your excuses and force you to get shit done
-                  </p>
+
+                {/* Agent Selector */}
+                <div className="hidden md:block">
+                  <AgentSelector
+                    currentAgentId={currentAgentId}
+                    onAgentChange={setCurrentAgentId}
+                  />
                 </div>
               </div>
             </div>
@@ -542,9 +565,10 @@ export default function CoachPage() {
                           : "bg-white shadow border border-gray-200"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      <MarkdownText
+                        content={message.content}
+                        className="text-sm whitespace-pre-wrap"
+                      />
 
                       {/* Show goal creation card for assistant messages */}
                       {message.role === "assistant" &&

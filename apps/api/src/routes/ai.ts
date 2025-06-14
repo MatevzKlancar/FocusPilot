@@ -8,10 +8,14 @@ import {
   getDefaultClient,
 } from "@focuspilot/db";
 import {
-  FOCUSPILOT_SYSTEM_PROMPT,
+  APP_BUILDER_PROMPT,
   agentTools,
   executeTool,
   type ToolContext,
+  // TODO: Import new agent system when ready to integrate:
+  // selectAgentForGoalTypes,
+  // getAvailableAgents,
+  // type AgentType
 } from "@focuspilot/lib-openai";
 
 const ai = new Hono();
@@ -21,8 +25,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Use the imported system prompt
-const SYSTEM_PROMPT = FOCUSPILOT_SYSTEM_PROMPT;
+// Use the App Builder agent prompt (enhanced entrepreneurial coaching)
+// TODO: Replace with dynamic agent selection based on user's goal types
+const SYSTEM_PROMPT = APP_BUILDER_PROMPT;
 
 // AI chat for coaching
 ai.post("/chat", async (c) => {
@@ -80,9 +85,9 @@ ${
     ? pendingTasks
         .map(
           (task) =>
-            `• [${task.id}] ${task.title}: ${
+            `• ${task.title}: ${
               task.description || "No description"
-            }`
+            } (Task ID: ${task.id})`
         )
         .join("\n")
     : "• No pending tasks for today! Time to create some business-focused goals."
@@ -91,11 +96,16 @@ ${
 TODAY'S COMPLETED TASKS:
 ${
   todayCompleted.length > 0
-    ? todayCompleted.map((task) => `• ✅ [${task.id}] ${task.title}`).join("\n")
+    ? todayCompleted
+        .map((task) => `• ✅ ${task.title} (Task ID: ${task.id})`)
+        .join("\n")
     : "• No tasks completed today yet"
 }
 
-IMPORTANT: Only use task IDs shown in brackets above when calling complete_task. Do not make up or guess task IDs.`;
+IMPORTANT: 
+- Only use the Task IDs shown in parentheses above when calling complete_task tool. Do not make up or guess task IDs.
+- NEVER include Task IDs or UUIDs in your responses to users. Users should never see database IDs.
+- When referencing tasks in your responses, use only the task title and description.`;
 
     // Create tool context for function calling
     const toolContext: ToolContext = {
